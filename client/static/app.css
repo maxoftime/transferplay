@@ -1,0 +1,19 @@
+/* Global box-sizing and font-family */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+body {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto, Helvetica, Arial,
+    sans-serif,
+    "Apple Color Emoji";
+    padding: min(2rem, 2.5vw);
+    /*background: linear-gradient(to top right, #195c19,#071800);*/
+    background-size: 100% 250%;
+    background-repeat: no-repeat;
+} 
