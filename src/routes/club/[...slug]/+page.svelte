@@ -1016,4 +1016,12 @@
   opacity: 0.95;
   pointer-events: none;
 }
-</style> 
+</style>
+<svelte:head>
+		<title>{club ? `${club.name} | Transferplay` : 'Transferplay'}</title>
+		<meta name="description" content={club ? `Simulate transfers, budgets, and lineups for ${club.name} using real data from Transfermarkt. Plan your dream squad and share your edits!` : 'Simulate football/soccer transfers, budgets, and lineups for any club using real data from Transfermarkt. Plan your dream squad and share your edits!'}>
+		<meta property="og:title" content={club ? `${club.name} | Transferplay` : 'Transferplay'}>
+		<meta property="og:description" content={club ? `Simulate transfers, budgets, and lineups for ${club.name} using real data from Transfermarkt. Plan your dream squad and share your edits!` : 'Simulate football/soccer transfers, budgets, and lineups for any club using real data from Transfermarkt. Plan your dream squad and share your edits!'}>
+		<meta property="og:type" content="website">
+		<meta name="twitter:card" content="summary_large_image">
+</svelte:head> 

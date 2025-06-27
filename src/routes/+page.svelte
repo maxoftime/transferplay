@@ -220,3 +220,11 @@
     margin-bottom: 1rem;
   }
 </style>
+<svelte:head>
+		<title>{'Transferplay'}</title>
+		<meta name="description" content={'Simulate football/soccer transfers, budgets, and lineups for any club using real data from Transfermarkt. Plan your dream squad and share your edits!'}>
+		<meta property="og:title" content={'Transferplay'}>
+		<meta property="og:description" content={'Simulate football/soccer transfers, budgets, and lineups for any club using real data from Transfermarkt. Plan your dream squad and share your edits!'}>
+		<meta property="og:type" content="website">
+		<meta name="twitter:card" content="summary_large_image">
+</svelte:head> 
