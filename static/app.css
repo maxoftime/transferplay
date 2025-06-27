@@ -1,4 +1,11 @@
 /* Global box-sizing and font-family */
+:root {
+  --text-color: #fff;
+  --border-color: #636363;
+  --positive-green: green;
+  --negative-red: red;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -14,6 +21,19 @@ body {
     "Apple Color Emoji";
     padding: min(2rem, 2.5vw);
     /*background: linear-gradient(to top right, #195c19,#071800);*/
-    background-size: 100% 250%;
+    background-color: #166d3b;
+    background-image: linear-gradient(147deg, #020b04 0%,  #022812 74%);
+    background-size: 100% 100vh;
     background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--text-color);
 } 
+
+p {
+  font-weight: 20;
+  color: var(--text-color);
+}
+
+th, tr{
+  font-weight: 20;
+}

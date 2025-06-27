@@ -21,6 +21,8 @@
   let showOriginalSquad = true;
   let showNewSquad = true;
   let showLineup = true;
+  let showShareCopied = false;
+  let loadedFromShare = false;
 
   $: slugArr = $page.params.slug;
   $: slug = Array.isArray(slugArr) ? slugArr.join('/') : slugArr;
@@ -91,9 +93,18 @@
     }
   }
 
-  onMount(fetchClub);
+  onMount(() => {
+    fetchClub();
+    // Check for ?share= param
+    const params = new URLSearchParams(window.location.search);
+    const shareParam = params.get('share');
+    if (shareParam) {
+      loadStateFromShareParam(shareParam);
+      loadedFromShare = true;
+    }
+  });
 
-  $: if (saveKey) {
+  $: if (saveKey && !loadedFromShare) {
     loadState();
   }
 
@@ -336,36 +347,69 @@
       .map(s => s.player && getPlayerKey(s.player));
     return newSquad.filter(p => !pickedKeys.includes(getPlayerKey(p)));
   });
+
+  function shareState() {
+    const state = getCurrentState();
+    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
+    const url = `${window.location.origin}/club/${slug}?share=${encoded}`;
+    navigator.clipboard.writeText(url);
+    showShareCopied = true;
+    setTimeout(() => showShareCopied = false, 1800);
+  }
+
+  function loadStateFromShareParam(param: string) {
+    try {
+      const decoded = decodeURIComponent(param);
+      const json = decodeURIComponent(escape(atob(decoded)));
+      const state = JSON.parse(json);
+      incoming = state.incoming || [];
+      outgoing = state.outgoing || [];
+      lineup = state.lineup || [];
+      selectedFormationName = state.selectedFormationName;
+      $: selectedFormation = formations.find(f => f.name === selectedFormationName) ?? formations[0];
+      stateLoaded = true;
+    } catch (e) {
+      error = 'Failed to load shared team.';
+    }
+  }
 </script>
 
 <main class="club-container">
   {#if loading}
-    <div class="loader">Loading club data</div>
+    <div class="loader">Loading club data<span class="animated-loader">...</span></div>
   {:else if error}
     <div class="error">{error}</div>
   {:else if club}
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;">
       <h1 style="margin:0;">{club.name}</h1>
-      <div style="display:flex;gap:0.5rem;">
+      <div style="display:flex;gap:0.5rem;position:relative;">
         <button class="header-btn" on:click={saveState}>Save</button>
         <button class="header-btn" on:click={resetState}>Reset</button>
+        <button class="header-btn" on:click={shareState}>Share</button>
+        {#if showShareCopied}
+          <span class="share-tooltip">Link copied!</span>
+        {/if}
       </div>
     </div>
     
     <div class="transfer-summary">
       <h3>Transfer Summary</h3>
-      <div class="valuation">{club.totalMarketValue}</div>
       <div class="summary-grid">
         <div class="summary-item">
-          <span class="summary-label">Incoming Total:</span>
+          <span class="summary-label">Market Value: </span>
+          <span class="summary-value outgoing">{club.totalMarketValue.replace(" Total market value", "")}</span>
+        </div>
+      
+        <div class="summary-item">
+          <span class="summary-label">Spent:</span>
           <span class="summary-value outgoing">{formatValue(netValues.incoming)}</span>
         </div>
         <div class="summary-item">
-          <span class="summary-label">Outgoing Total:</span>
+          <span class="summary-label">Earned:</span>
           <span class="summary-value incoming">{formatValue(netValues.outgoing)}</span>
         </div>
         <div class="summary-item">
-          <span class="summary-label">Net Transfer:</span>
+          <span class="summary-label">Net:</span>
           <span class="summary-value {netValues.net >= 0 ? 'positive' : 'negative'}">{formatValue(netValues.net)}</span>
         </div>
         <div class="summary-item">
@@ -585,18 +629,21 @@
 }
 .squad-table th, .squad-table td {
   padding: 0.5rem 0.7rem;
-  border-bottom: 1px solid #e0e6ed;
+  border-bottom: 1px solid var(--border-color);
   text-align: left;
   vertical-align: middle;
   min-height: 2.5rem;
   font-size: 1rem;
 }
 .squad-table th {
-  background: #f4f8fa;
-  font-weight: 600;
+  border-bottom-width: 2px;
+  font-weight: 500;
 }
 .squad-table tr.outgoing {
-  background: #ffe6e6;
+  background: color-mix(in srgb, var(--negative-red) 30%, #ffffff33)
+}
+.squad-table tr.new-player {
+  background: color-mix(in srgb, var(--positive-green) 30%, #ffffff33)
 }
 .squad-table .player-value {
   font-weight: 500;
@@ -628,7 +675,7 @@
 .transfer-box input[type="text"] {
   flex: 1;
   padding: 0.4rem 0.8rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 .transfer-box button {
@@ -636,6 +683,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  color: inherit;
 }
 .transfer-box > ul {
   flex-basis: 100%;
@@ -646,18 +694,39 @@
   list-style: none;
 }
 .loader {
-  text-align: center;
-  color: #888;
+  font-weight: 15;
+  font-size: 3rem;
+  color: var(--positive-green);
+}
+.animated-loader {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: animated-loader-reveal 1s steps(3, end) infinite;
+
+@keyframes animated-loader-reveal {
+  0% {
+    width: 0%;
+  }
+  33.333% {
+    width: 33.333%;
+  }
+  66.666% {
+    width: 66.666%;
+  }
+  100% {
+    width: 100%;
+  }
+}
 }
 .error {
-  color: #c00;
-  text-align: center;
+  color: var(--negative-red);
 }
 .loader-inline {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid #0f5110;
+  border: 2px solid color-mix(in HSL, var(--positive-green) 80%, #222);;
   border-top: 2px solid transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -669,7 +738,7 @@
   left: 0;
   right: 0;
   top: 110%;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   z-index: 10;
   list-style: none;
   margin: 0;
@@ -677,6 +746,8 @@
   max-height: 200px;
   overflow-y: auto;
   background: #fff;
+  color: #222;
+  width: max(100%, 500px);
 }
 .autocomplete-dropdown li {
   padding: 0.7rem 1rem;
@@ -684,23 +755,25 @@
   transition: background 0.15s;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+}
+.autocomplete-dropdown li span:first-of-type {
+  flex-basis: 60%;
 }
 .autocomplete-dropdown li:hover {
   background: none;
 }
 .player-nationality {
-  color: #888;
   font-size: 0.95em;
 }
 .player-club {
-  color: #444;
   font-size: 0.95em;
 }
 .plus-btn {
   margin-left: auto;
   background: none;
-  color: #28a745;
+  color: var(--positive-green);
   border: none;
   width: 28px;
   height: 28px;
@@ -711,7 +784,7 @@
   transition: color 0.2s;
 }
 .plus-btn:hover {
-  color: #176c2a;
+  color: color-mix(in HSL, var(--positive-green) 80%, #222);;
   background: none;
 }
 .debug {
@@ -720,7 +793,6 @@
   left: 0;
   padding: 0.2rem 0.5rem;
   font-size: 0.8rem;
-  color: #666;
   z-index: 5;
 }
 .incoming-player,
@@ -729,7 +801,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 .remove-btn {
   margin-left: auto;
@@ -752,37 +824,31 @@
 .transfer-summary h3 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #333;
 }
 .summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
 }
 .summary-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 200px auto;
   align-items: center;
-}
-.summary-label {
-  font-weight: 500;
-  color: #495057;
+  font-size: 1.3em;
+  font-weight: 15;
 }
 .summary-value {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
 }
 .summary-value.incoming {
-  color: #28a745;
+  color: var(--positive-green);
 }
 .summary-value.outgoing {
-  color: #dc3545;
+  color: var(--negative-red);
 }
 .summary-value.positive {
-  color: #28a745;
+  color: var(--positive-green);
 }
 .summary-value.negative {
-  color: #dc3545;
+  color: var(--negative-red);
 }
 .squads-comparison {
   display: flex;
@@ -800,14 +866,14 @@
 .arrow-btn {
   background: none;
   border: none;
-  color: #dc3545;
+  color: var(--negative-red);
   cursor: pointer;
   padding: 0 0.5rem;
   border-radius: 0;
   transition: color 0.2s;
 }
 .arrow-btn:hover {
-  color: #a71d2a;
+  color: color-mix(in HSL, var(--negative-red) 80%, #222);
   background: none;
 }
 .lineup-builder-section {
@@ -879,7 +945,6 @@
   text-align: center;
   background: none;
   border: none;
-  color: #fff;
 }
 .reset-btn {
   margin-left: 1rem;
@@ -893,26 +958,23 @@
   transition: background 0.2s;
 }
 .reset-btn:hover {
-  background: #ccc;
 }
+
 .back-btn {
   background: none !important;
   border: none;
-  color: #28a745;
+  color: var(--positive-green);
   cursor: pointer;
   border-radius: 0;
   transition: color 0.2s;
   margin: 0 0 0 auto;
 }
 .back-btn:hover {
-  color: #176c2a;
+  color: color-mix(in HSL, var(--positive-green) 80%, #222);
   background: none !important;
 }
 .squad-table tr {
   height: 2.5rem;
-}
-.new-player {
-  background: #e6f9e6;
 }
 .header-btn {
   background: none;
@@ -923,12 +985,11 @@
   color: inherit;
 }
 .header-btn:focus {
-  outline: 2px solid #333;
+  outline: 2px solid #222;
 }
 .collapse-btn {
   background: none;
   border: none;
-  color: #888;
   font-size: 1.2rem;
   cursor: pointer;
   margin-left: 0.5rem;
@@ -936,8 +997,23 @@
   line-height: 1;
   font-weight: 700;
   transition: color 0.2s;
+  color: inherit;
 }
 .collapse-btn:hover {
-  color: #222;
+}
+.share-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #222;
+  color: #fff;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0.95;
+  pointer-events: none;
 }
 </style> 

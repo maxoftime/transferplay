@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
+  import { fade } from 'svelte/transition';
   let team = '';
   let results: any[] = [];
   let loading = false;
@@ -10,6 +11,20 @@
 
   // Debounce timer
   let debounceTimer: ReturnType<typeof setTimeout>;
+
+  let placeholderTeams = ['AIK', 'Boca Junior', 'Juventus', 'Shamrock Rovers', 'Al-Ettifaq', 'Mamelodi Sundowns', 'Kaiser Cheifs', 'Barcelona', 'HJK'];
+  let placeholderIndex = 0;
+  let placeholder = placeholderTeams[0];
+  let placeholderInterval: ReturnType<typeof setInterval>;
+
+  function startPlaceholderSwitcher() {
+    placeholderInterval = setInterval(() => {
+      placeholderIndex = (placeholderIndex + 1) % placeholderTeams.length;
+      placeholder = placeholderTeams[placeholderIndex];
+    }, 2000);
+  }
+
+  startPlaceholderSwitcher();
 
   async function fetchTeams(query: string) {
     if (!query) {
@@ -59,6 +74,7 @@
   onDestroy(() => {
     if (abortController) abortController.abort();
     clearTimeout(debounceTimer);
+    clearInterval(placeholderInterval);
   });
 </script>
 
@@ -67,7 +83,7 @@
     <div class="autocomplete-wrapper">
       <input
         type="text"
-        placeholder="Search for a football team..."
+        placeholder={team ? '' : `e.g. ${placeholder}`}
         bind:value={team}
         aria-label="Team search"
         on:input={onInput}
@@ -95,7 +111,9 @@
     <div class="error">{error}</div>
   {/if}
   <p class="description">
-    Find your favourite team and experiment with potential transfers and budgets. Search to get started!
+    Find your favourite team and experiment with potential transfers and budgets.
+    <br><br>
+    Search to get started!
   </p>
 </main>
 
@@ -108,6 +126,7 @@
     gap: 0.5rem;
     margin-bottom: 1.5rem;
     justify-content: center;
+    max-width: 720px;
   }
   .autocomplete-wrapper {
     position: relative;
@@ -115,20 +134,24 @@
   }
   input[type="text"] {
     flex: 1;
-    padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding: 1.3rem;
     font-size: 1rem;
     width: 100%;
+    margin: 1rem auto 0;
+    border-radius: 2px;
+    border: none;
+  }
+  input:focus-visible {
+    outline-color: var(--positive-green);
   }
   .loader {
     position: absolute;
-    right: 10px;
-    top: 50%;
+    right: 20px;
+    top: 60%;
     transform: translateY(-50%);
     width: 18px;
     height: 18px;
-    border: 2px solid #0070f3;
+    border: 2px solid var(--positive-green);
     border-top: 2px solid transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -142,16 +165,16 @@
     left: 0;
     right: 0;
     top: 110%;
-    background: #fff;
     border: 1px solid #ccc;
     border-radius: 0 0 8px 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     z-index: 10;
     list-style: none;
     margin: 0;
     padding: 0;
     max-height: 200px;
     overflow-y: auto;
+    background: #fff;
+    color: #222;
   }
   .team-logo {
     width: 28px;
@@ -176,7 +199,7 @@
   }
   button {
     padding: 0.5rem 1.2rem;
-    background: #0070f3;
+    background: var(--positive-green);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -185,15 +208,15 @@
     transition: background 0.2s;
   }
   button:hover {
-    background: #005bb5;
+    background: var(--positive-green);
   }
   .description {
-    color: #444;
-    font-size: 1.1rem;
-    margin-top: 1.5rem;
+    font-size: min(3.5rem, 13vw);
+    margin-top: 3rem;
+    max-width: 760px;
   }
   .error {
-    color: #c00;
+    color: var(--negative-red);
     margin-bottom: 1rem;
   }
 </style>
