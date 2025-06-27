@@ -380,6 +380,7 @@
   {:else if error}
     <div class="error">{error}</div>
   {:else if club}
+  
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;">
       <h1 style="margin:0;">{club.name}</h1>
       <div style="display:flex;gap:0.5rem;position:relative;">
@@ -564,6 +565,18 @@
         {/if}
       </div>
     </div>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7695347433106162"
+      crossorigin="anonymous"></script>
+    <!-- Topline -->
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-7695347433106162"
+      data-ad-slot="1506792783"
+      data-ad-format="auto"
+      data-full-width-responsive="true"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
     <div class="lineup-builder-section">
       <h3 style="display:flex;align-items:center;justify-content:space-between;">
         Build Your Lineup
