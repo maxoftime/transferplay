@@ -21,11 +21,12 @@ body {
     "Apple Color Emoji";
     padding: min(2rem, 2.5vw);
     /*background: linear-gradient(to top right, #195c19,#071800);*/
-    background-color: #166d3b;
+    background-color: #020b04;
     background-image: linear-gradient(147deg, #020b04 0%,  #022812 74%);
-    background-size: 100% 100vh;
+    background-size: 150% 150vh;
     background-repeat: no-repeat;
     background-attachment: fixed;
+    background-position: top left;
     color: var(--text-color);
 } 
 

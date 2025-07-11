@@ -23,7 +23,19 @@
   let showLineup = true;
   let showShareCopied = false;
   let loadedFromShare = false;
+  let newSquad: any[] = [];
+  let clubLoaded = false;
 
+  $: if (club && stateLoaded) {
+    newSquad = [
+      ...(club?.players?.filter(
+        (player: any) => !outgoing.some((o) => o.name === player.name && o.value === player.value)
+      ) ?? []),
+      ...incoming
+    ];
+  } else {
+    newSquad = [];
+  }
   $: slugArr = $page.params.slug;
   $: slug = Array.isArray(slugArr) ? slugArr.join('/') : slugArr;
   $: incomingJson = JSON.stringify(incoming);
@@ -33,23 +45,147 @@
   $: console.log('Arrays changed:', { incoming: incoming.length, outgoing: outgoing.length, netValues, squadDifference });
 
   $: squadDummy = JSON.stringify(club?.players) + incomingJson + outgoingJson;
-  $: newSquad = (club && stateLoaded)
-    ? [
-        ...(club?.players?.filter(
-          (player: any) => !outgoing.some((o) => o.name === player.name && o.value === player.value)
-        ) ?? []),
-        ...incoming
-      ]
-    : [];
 
-  // Lineup builder state
+  // Refactored formations: each has name, positions, and coordinates
   const formations = [
-    { name: '4-3-3', positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'CM', 'LW', 'ST', 'RW'] },
-    { name: '4-2-3-1', positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'LM', 'CAM', 'RM', 'ST'] },
-    { name: '4-4-2', positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'] },
-    { name: '3-5-2', positions: ['GK', 'CB', 'CB', 'CB', 'LWB', 'CDM', 'CM', 'CM', 'RWB', 'ST', 'ST'] },
-    { name: '3-4-3', positions: ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'RM', 'LW', 'ST', 'RW'] },
+    {
+      name: '4-3-3',
+      positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'CM', 'LW', 'ST', 'RW'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 15, y: 60 },   // LB
+        { x: 35, y: 68 },   // CB
+        { x: 65, y: 68 },   // CB
+        { x: 85, y: 60 },   // RB
+        { x: 20, y: 42 },   // CM (left)
+        { x: 50, y: 42 },   // CM (center)
+        { x: 80, y: 42 },   // CM (right)
+        { x: 20, y: 20 },   // LW
+        { x: 50, y: 18 },   // ST
+        { x: 80, y: 20 },   // RW
+      ]
+    },
+    {
+      name: '4-2-3-1',
+      positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'LM', 'CAM', 'RM', 'ST'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 15, y: 60 },   // LB
+        { x: 35, y: 68 },   // CB
+        { x: 65, y: 68 },   // CB
+        { x: 85, y: 60 },   // RB
+        { x: 32, y: 48 },   // CDM
+        { x: 68, y: 48 },   // CDM
+        { x: 20, y: 33 },   // LM
+        { x: 50, y: 33 },   // CAM
+        { x: 80, y: 33 },   // RM
+        { x: 50, y: 18 },   // ST
+      ]
+    },
+    {
+      name: '4-3-2-1',
+      positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'CM', 'CAM', 'CAM', 'ST'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 15, y: 60 },   // LB
+        { x: 35, y: 68 },   // CB
+        { x: 65, y: 68 },   // CB
+        { x: 85, y: 60 },   // RB
+        { x: 20, y: 45 },   // CM (left)
+        { x: 50, y: 45 },   // CM (center)
+        { x: 80, y: 45 },   // CM (right)
+        { x: 38, y: 30 },   // CAM (left)
+        { x: 62, y: 30 },   // CAM (right)
+        { x: 50, y: 18 },   // ST
+      ]
+    },
+    {
+      name: '4-4-2',
+      positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 15, y: 60 },   // LB
+        { x: 35, y: 68 },   // CB
+        { x: 65, y: 68 },   // CB
+        { x: 85, y: 60 },   // RB
+        { x: 15, y: 38 },   // LM
+        { x: 35, y: 45 },   // CM
+        { x: 65, y: 45 },   // CM
+        { x: 85, y: 38 },   // RM
+        { x: 34, y: 18 },   // ST
+        { x: 66, y: 18 },   // ST
+      ]
+    },
+    {
+      name: '4-4-2 (Diamond)',
+      positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CDM', 'CAM', 'RM', 'ST', 'ST'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 15, y: 60 },   // LB
+        { x: 35, y: 68 },   // CB
+        { x: 65, y: 68 },   // CB
+        { x: 85, y: 60 },   // RB
+        { x: 15, y: 40 },   // LM
+        { x: 50, y: 50 },   // CDM
+        { x: 50, y: 32 },   // CAM
+        { x: 85, y: 40 },   // RM
+        { x: 34, y: 18 },   // ST
+        { x: 66, y: 18 },   // ST
+      ]
+    },
+    {
+      name: '4-2-2-2',
+      positions: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'CAM', 'CAM', 'ST', 'ST'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 15, y: 60 },   // LB
+        { x: 35, y: 68 },   // CB
+        { x: 65, y: 68 },   // CB
+        { x: 85, y: 60 },   // RB
+        { x: 34, y: 50 },   // CDM
+        { x: 66, y: 50 },   // CDM
+        { x: 34, y: 32 },   // CAM (left)
+        { x: 66, y: 32 },   // CAM (right)
+        { x: 34, y: 18 },   // ST (left)
+        { x: 66, y: 18 },   // ST (right)
+      ]
+    },
+    {
+      name: '3-5-2',
+      positions: ['GK', 'CB', 'CB', 'CB', 'LWB', 'CAM', 'CDM', 'CAM', 'RWB', 'ST', 'ST'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 20, y: 68 },   // CB (left)
+        { x: 50, y: 68 },   // CB (center)
+        { x: 80, y: 68 },   // CB (right)
+        { x: 15, y: 44 },   // LWB (very wide, moved up)
+        { x: 32, y: 36 },   // CAM (left)
+        { x: 50, y: 50 },   // CDM (center, slightly deeper)
+        { x: 68, y: 36 },   // CAM (right, moved up)
+        { x: 85, y: 44 },   // RWB (very wide)
+        { x: 34, y: 18 },   // ST (left)
+        { x: 66, y: 18 },   // ST (right)
+      ]
+    },
+    {
+      name: '3-4-3',
+      positions: ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'RM', 'LW', 'ST', 'RW'],
+      coordinates: [
+        { x: 50, y: 82 },   // GK
+        { x: 20, y: 68 },   // CB (left)
+        { x: 50, y: 68 },   // CB (center)
+        { x: 80, y: 68 },   // CB (right)
+        { x: 15, y: 44 },   // LM
+        { x: 38, y: 49 },   // CM
+        { x: 62, y: 49 },   // CM
+        { x: 85, y: 44 },   // RM
+        { x: 20, y: 24 },   // LW
+        { x: 50, y: 18 },   // ST
+        { x: 80, y: 24 },   // RW
+      ]
+    },
   ];
+
   let selectedFormationName = formations[0].name;
   $: selectedFormation = formations.find(f => f.name === selectedFormationName) ?? formations[0];
   let lineup: { position: string, player: any | null }[] = [];
@@ -86,6 +222,8 @@
       const res = await fetch(`/api/club/${encodeURIComponent(slug)}`);
       if (!res.ok) throw new Error('Failed to fetch club data');
       club = await res.json();
+      clubLoaded = true;
+      // recalculateNewSquad(); // This is now handled by the reactive statement
     } catch (e: any) {
       error = e.message || 'Unknown error';
     } finally {
@@ -145,7 +283,7 @@
   }
 
   function selectPlayer(player: any) {
-    if (!incoming.some(p => p.name === player.name && p.value === player.value)) {
+    if (!incoming.some(p => getPlayerKey(p) === getPlayerKey(player))) {
       incoming = [...incoming, player];
     }
     playerSearch = '';
@@ -154,7 +292,7 @@
   }
 
   function removePlayer(index: number) {
-    incoming = [...incoming.filter((_, i) => i !== index)];
+    incoming = incoming.filter((_, i) => i !== index);
   }
 
   function normalizeValue(val: string) {
@@ -182,9 +320,7 @@
   }
 
   function removeOutgoing(index: number) {
-    // Remove by key to ensure correct removal
-    const keyToRemove = getPlayerKey(outgoing[index]);
-    outgoing = outgoing.filter((p, i) => getPlayerKey(p) !== keyToRemove || i !== index);
+    outgoing = outgoing.filter((_, i) => i !== index);
   }
 
   function parseValue(value: string): number {
@@ -269,6 +405,7 @@
     if (saveKey) {
       localStorage.setItem(saveKey, JSON.stringify(getCurrentState()));
     }
+    // recalculateNewSquad(); // This is now handled by the reactive statement
   }
 
   async function loadState() {
@@ -282,12 +419,12 @@
         selectedFormationName = state.selectedFormationName;
         $: selectedFormation = formations.find(f => f.name === selectedFormationName) ?? formations[0];
         await tick();
-        // Re-assign to force reactivity
         incoming = [...incoming];
         outgoing = [...outgoing];
       }
     }
-    stateLoaded = true;
+    if (clubLoaded) stateLoaded = true;
+    // recalculateNewSquad(); // This is now handled by the reactive statement
   }
 
   function resetState() {
@@ -297,6 +434,7 @@
     selectedFormationName = formations[0].name;
     $: selectedFormation = formations.find(f => f.name === selectedFormationName) ?? formations[0];
     saveState();
+    // recalculateNewSquad(); // This is now handled by the reactive statement
   }
 
   function isNewPlayer(player: any) {
@@ -304,41 +442,12 @@
   }
 
   function getPitchSlotStyle(positions: string[], idx: number) {
-    // Calculate row and column based on position in formation
-    // GK always row 1, defenders row 2, mids row 3, forwards row 4, etc.
-    // This is a simple heuristic, can be improved for more formations
-    const totalRows = 5;
-    let rowMap: Record<string, number> = {
-      GK: 1,
-      LB: 2, CB: 2, RB: 2, LWB: 2, RWB: 2,
-      CDM: 3, CM: 3, LM: 3, RM: 3, CAM: 4, LW: 4, RW: 4, ST: 4, CF: 4
-    };
-    // Count how many in each row
-    let rowCounts: number[] = Array(totalRows + 1).fill(0);
-    let rowIndices: number[] = Array(positions.length).fill(0);
-    positions.forEach((pos, i) => {
-      let row = rowMap[pos] || 3;
-      rowCounts[row]++;
-      rowIndices[i] = row;
-    });
-    // For each slot, calculate its position in its row
-    let rowSlots: number[] = Array(totalRows + 1).fill(0);
-    let slotIndexInRow = rowIndices.map((row, i) => {
-      let idxInRow = rowSlots[row];
-      rowSlots[row]++;
-      return idxInRow;
-    });
-    // Now, for this idx, get its row and index in row
-    let row = rowIndices[idx];
-    let countInRow = rowCounts[row];
-    let indexInRow = slotIndexInRow[idx];
-    // Vertically center the rows: use 20% to 80% instead of 10% to 90%
-    let top = 80 - (row - 1) * 20; // 80%, 65%, 50%, 35%, 20%
-    let left = 50;
-    if (countInRow > 1) {
-      left = 50 + ((indexInRow - (countInRow - 1) / 2) * (60 / (countInRow - 1)));
+    const coords = selectedFormation.coordinates;
+    if (coords && coords[idx]) {
+      const { x, y } = coords[idx];
+      return `top: ${y}%; left: ${x}%; transform: translate(-50%, -50%);`;
     }
-    return `top: ${top}%; left: ${left}%; transform: translate(-50%, -50%);`;
+    return '';
   }
 
   $: availablePlayersList = lineup.map((slot, idx) => {
@@ -367,7 +476,8 @@
       lineup = state.lineup || [];
       selectedFormationName = state.selectedFormationName;
       $: selectedFormation = formations.find(f => f.name === selectedFormationName) ?? formations[0];
-      stateLoaded = true;
+      if (clubLoaded) stateLoaded = true;
+      // recalculateNewSquad(); // This is now handled by the reactive statement
     } catch (e) {
       error = 'Failed to load shared team.';
     }
@@ -565,6 +675,9 @@
         {/if}
       </div>
     </div>
+    <div class="sad-frame">
+      
+    
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7695347433106162"
       crossorigin="anonymous"></script>
     <!-- Topline -->
@@ -577,6 +690,7 @@
     <script>
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
+    </div>
     <div class="lineup-builder-section">
       <h3 style="display:flex;align-items:center;justify-content:space-between;">
         Build Your Lineup
@@ -611,7 +725,7 @@
                         setPlayerForPosition(idx, newSquad.find(p => p.name === name && p.value === value));
                         (e.target as HTMLSelectElement).value = "";
                       }}>
-                      <option value="">{slot.position}</option>
+                      <option value="">{selectedFormation.positions[idx]}</option>
                       {#each availablePlayersList[idx] as player}
                         <option value={player.name + '|' + player.value}>{player.name}</option>
                       {/each}
@@ -760,7 +874,7 @@
   overflow-y: auto;
   background: #fff;
   color: #222;
-  width: max(100%, 500px);
+  width: min(calc(100vw - 30px), 502px);
 }
 .autocomplete-dropdown li {
   padding: 0.7rem 1rem;
@@ -940,7 +1054,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   margin-bottom: 0.2rem;
   text-align: center;
 }
@@ -953,21 +1067,20 @@
   border: none;
 }
 .pitch-slot .add-player-dropdown select {
+  color: #fff;
   padding: 0;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   text-align: center;
   background: none;
   border: none;
+  width: 53px;
 }
 .reset-btn {
-  margin-left: 1rem;
-  padding: 0.3rem 1rem;
-  background: #e0e0e0;
-  color: #333;
+  margin-left: 0;
+  color: #fff;
+  background: none;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
   transition: background 0.2s;
 }
 .reset-btn:hover {
@@ -1028,6 +1141,9 @@
   z-index: 10;
   opacity: 0.95;
   pointer-events: none;
+}
+.sad-frame {
+  max-width: 100%;
 }
 </style>
 <svelte:head>
