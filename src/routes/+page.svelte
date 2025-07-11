@@ -12,7 +12,40 @@
   // Debounce timer
   let debounceTimer: ReturnType<typeof setTimeout>;
 
-  let placeholderTeams = ['AIK', 'Boca Junior', 'Juventus', 'Shamrock Rovers', 'Al-Ettifaq', 'Mamelodi Sundowns', 'Kaiser Cheifs', 'Barcelona', 'HJK'];
+  // Expanded and corrected placeholder teams array
+  let placeholderTeams = [
+    // Europe
+    'Manchester United', 'Real Madrid', 'Barcelona', 'Bayern Munich', 'Juventus', 'Paris Saint-Germain', 'Ajax', 'Celtic', 'Rangers', 'Shamrock Rovers', 'HJK', 'AIK', 'FC Copenhagen', 'Benfica', 'Porto', 'Sporting CP', 'Galatasaray', 'Fenerbahce', 'Olympiacos', 'Dynamo Kyiv',
+    'Arsenal', 'Chelsea', 'Liverpool', 'Tottenham Hotspur', 'Inter Milan', 'AC Milan', 'Atletico Madrid', 'Borussia Dortmund', 'RB Leipzig', 'Sevilla', 'Lyon', 'Marseille', 'PSV Eindhoven', 'Club Brugge', 'Zenit St. Petersburg', 'Spartak Moscow', 'Rapid Wien', 'Lech Poznań', 'Ferencváros', 'Partizan Belgrade', 'CFR Cluj',
+    // South America
+    'Boca Juniors', 'River Plate', 'Flamengo', 'Palmeiras', 'Santos', 'Corinthians', 'Nacional', 'Peñarol', 'Colo-Colo',
+    'São Paulo', 'Internacional', 'Atlético Mineiro', 'Grêmio', 'Universidad de Chile', 'Universitario', 'Emelec', 'LDU Quito', 'Olimpia', 'Cerro Porteño', 'Bolívar',
+    // Africa
+    'Al Ahly', 'Zamalek', 'Mamelodi Sundowns', 'Kaizer Chiefs', 'Esperance', 'Wydad Casablanca', 'TP Mazembe',
+    'Raja Casablanca', 'Orlando Pirates', 'Simba SC', 'Al-Merrikh', 'JS Kabylie', 'ASEC Mimosas', 'Horoya AC',
+    // Asia
+    'Al-Hilal', 'Al-Nassr', 'Urawa Red Diamonds', 'Kashima Antlers', 'Jeonbuk Hyundai', 'Guangzhou Evergrande', 'Persepolis',
+    'Suwon Samsung Bluewings', 'Shanghai SIPG', 'Al-Sadd', 'Esteghlal', 'Sepahan', 'Buriram United',
+    // North America
+    'LA Galaxy', 'Club América', 'Tigres UANL', 'Toronto FC', 'Seattle Sounders', 'New York City FC', 'CF Montréal',
+    'Chivas Guadalajara', 'Cruz Azul', 'Monterrey', 'Pachuca', 'Saprissa', 'Alajuelense', 'Motagua', 'Comunicaciones',
+    // Oceania
+    'Sydney FC', 'Auckland City', 'Wellington Phoenix', 'Melbourne Victory', 'Central Coast Mariners',
+    // Middle East
+    'Al-Ettifaq', 'Al-Ain', 'Hapoel Tel Aviv', 'Maccabi Haifa',
+    // Others
+    'Dinamo Zagreb', 'Red Star Belgrade', 'Shakhtar Donetsk', 'Basel', 'Young Boys', 'Anderlecht', 'Sparta Prague', 'Slovan Bratislava', 'Ludogorets Razgrad', 'Sheriff Tiraspol'
+  ];
+
+  // Shuffle the array (Fisher-Yates, not cryptographically random)
+  function shuffleArray(arr: any[]) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+  shuffleArray(placeholderTeams);
+
   let placeholderIndex = 0;
   let placeholder = placeholderTeams[0];
   let placeholderInterval: ReturnType<typeof setInterval>;
